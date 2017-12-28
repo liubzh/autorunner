@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:orientation="vertical">
+
+    <Button
+        android:visibility="gone"
+        android:id="@+id/ButtonTest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="20sp" />
+
+    <Button
+        android:id="@+id/ButtonWakeupService"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/start_wakeup_service"
+        android:textSize="20sp"
+        android:paddingTop="@dimen/button_padding"
+        android:paddingBottom="@dimen/button_padding"/>
+
+    <Button
+        android:visibility="gone"
+        android:id="@+id/ButtonShellService"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/start_shell_service"
+        android:textSize="20sp"
+        android:paddingTop="@dimen/button_padding"
+        android:paddingBottom="@dimen/button_padding"/>
+
+    <Button
+        android:visibility="gone"
+        android:id="@+id/ButtonStopAll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/stop_all"
+        android:textSize="20sp"
+        android:paddingTop="@dimen/button_padding"
+        android:paddingBottom="@dimen/button_padding"/>
+
+</LinearLayout>

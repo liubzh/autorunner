@@ -57,6 +57,23 @@ function launch_alipay() {
     am start com.eg.android.AlipayGphone/.AlipayLogin
 }
 
+# 当前活动
+function top_application() {
+    local top_app=$(dumpsys activity a | grep "mFocusedActivity:")
+    top_app=${top_app%/*}
+    top_app=${top_app##* }
+    echo "${top_app}" 
+}
+
+# 判断当前活动是否为支付宝
+function top_app_is_alipay() {
+    if [[ $(top_application) == com.eg.android.AlipayGphone ]]; then
+        echo true
+    else
+        echo false
+    fi
+}
+
 # 是否亮屏， ON 为亮屏， OFF 为灭屏
 function screen_state() {
     powerstate=$(dumpsys power | grep "Display Power: state=")
@@ -98,12 +115,9 @@ LOOP_TIME=480    # 8分钟
 #LOOP_TIME=900    # 15分钟
 LOOP_WAIT_TIME=1   # 1 秒
 
-# 判断屏幕是否在喂鸡流程执行期间突然灭屏，如果突然灭屏中止喂养，并继续循环等待
-alias check_screen_state='
-source ${SCREEN_STATE_FILE}
-if [[ ${SCREEN_STATE} == OFF ]]; then
-    echo "SCREEN_STATE=ON" > "${SCREEN_STATE_FILE}"
-    echo "灭屏流程中止"
+alias check_top_application='
+if [[ $(top_app_is_alipay) == false ]]; then
+    echo "流程中止"
     continue
 fi
 '
@@ -146,37 +160,37 @@ function main() {
         echo "启动支付宝"
         launch_alipay                     # 启动支付宝
         sleep 1                           # 等待初始化
-        check_screen_state
+        check_top_activity
         input tap 133 1887                # 点击首页
         echo "进入蚂蚁庄园"
         input tap 148 921                 # 点击蚂蚁庄园图标
         sleep 3                           # 等待网络加载
-        check_screen_state
+        check_top_activity
         input tap 400 1400                # 点击左边偷吃小鸡
         input tap 852 1400                # 点击右边偷吃小鸡
         input tap 215 1460                # 点击爱心鸡蛋
         input tap 918 1772                # 点击饲料
-        check_screen_state
+        check_top_activity
         echo "使用加速卡"
         input tap 960 660                 # 点击道具
         #wait_for_java SPEED_UP           # 使用加速卡
         input tap 887 1748                # 点击加速卡
         input tap 758 1246                # 点击使用按钮
         sleep 3
-        check_screen_state
+        check_top_activity
         input tap 1020 1198               # 关闭道具界面
         echo "查看好友列表"
         input tap 162 1735                # 好友
         sleep 2                           # 等待网络加载
-        check_screen_state
+        check_top_activity
         wait_for_java NOTIFY_FRIENDS      # 通知好友 第一页
-        check_screen_state
+        check_top_activity
         input swipe 550 1850 550 920 1200 # 向上滑动好友列表
         wait_for_java NOTIFY_FRIENDS      # 通知好友 第二页
-        check_screen_state
+        check_top_activity
         input swipe 550 1850 550 920 1200 # 向上滑动好友列表
         wait_for_java NOTIFY_FRIENDS      # 通知好友 第三页
-        check_screen_state
+        check_top_activity
         input keyevent 4                  # 退出好友界面
         input tap 400 1400                # 确认左边偷吃小鸡已赶跑
         input tap 852 1400                # 确认右边偷吃小鸡已赶跑

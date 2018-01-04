@@ -54,10 +54,10 @@ function wakeup_unlock() {
 
 # 启动支付宝程序
 function launch_alipay() {
-    am start com.eg.android.AlipayGphone/.AlipayLogin
+    am start com.eg.android.AlipayGphone/.AlipayLogin > /dev/null
 }
 
-# 当前活动
+# 当前应用程序
 function top_application() {
     local top_app=$(dumpsys activity a | grep "mFocusedActivity:")
     top_app=${top_app%/*}
@@ -65,9 +65,27 @@ function top_application() {
     echo "${top_app}" 
 }
 
-# 判断当前活动是否为支付宝
+# 当前活动
+function top_activity() {
+    local top_activity=$(dumpsys activity a | grep "mFocusedActivity:")
+    top_activity=${top_activity##*.}
+    top_activity=${top_activity%% *}
+    echo "${top_activity}" 
+}
+
+
+# 判断当前程序是否为支付宝
 function top_app_is_alipay() {
     if [[ $(top_application) == com.eg.android.AlipayGphone ]]; then
+        echo true
+    else
+        echo false
+    fi
+}
+
+# 判断当前活动是否为登陆界面
+function top_is_login_activity() {
+    if [[ $(top_activity) == AlipayUserLoginActivity ]]; then
         echo true
     else
         echo false
@@ -117,7 +135,7 @@ LOOP_WAIT_TIME=1   # 1 秒
 
 alias check_top_application='
 if [[ $(top_app_is_alipay) == false ]]; then
-    echo "流程中止"
+    echo "由于手动退出支付宝, 流程中止"
     continue
 fi
 '
@@ -142,12 +160,6 @@ function main() {
             sleep ${LOOP_WAIT_TIME}
             continue
         fi
-        # 只有灭屏状态才能触发喂鸡流程。
-        # source "${SCREEN_STATE_FILE}"
-        # if [[ ${SCREEN_STATE} == ON ]]; then
-        #     sleep ${LOOP_WAIT_TIME}
-        #     continue
-        # fi
         now_sec=$(date +%s)
         if ((now_sec - last_time_sec < ${LOOP_TIME})); then
             #echo "计算循环时间 休眠 1s"
@@ -160,43 +172,55 @@ function main() {
         echo "启动支付宝"
         launch_alipay                     # 启动支付宝
         sleep 1                           # 等待初始化
-        check_top_activity
+        if [[ $(top_is_login_activity) == true ]]; then
+            echo "未登录支付宝"
+	    input keyevent 4              # 返回键退出
+	    turn_off_screen               # 灭屏
+            continue                      # 如果当前未登录支付宝，循环等待
+        fi
+        check_top_application
         input tap 133 1887                # 点击首页
+        check_top_application
         echo "进入蚂蚁庄园"
         input tap 148 921                 # 点击蚂蚁庄园图标
-        sleep 3                           # 等待网络加载
-        check_top_activity
+        sleep 1                           # 等待网络加载
+        check_top_application
         input tap 400 1400                # 点击左边偷吃小鸡
+        check_top_application
         input tap 852 1400                # 点击右边偷吃小鸡
+        check_top_application
         input tap 215 1460                # 点击爱心鸡蛋
+        check_top_application
         input tap 918 1772                # 点击饲料
-        check_top_activity
+        check_top_application
         echo "使用加速卡"
         input tap 960 660                 # 点击道具
         #wait_for_java SPEED_UP           # 使用加速卡
+        check_top_application
         input tap 887 1748                # 点击加速卡
+        check_top_application
         input tap 758 1246                # 点击使用按钮
         sleep 3
-        check_top_activity
+        check_top_application
         input tap 1020 1198               # 关闭道具界面
+        check_top_application
         echo "查看好友列表"
         input tap 162 1735                # 好友
         sleep 2                           # 等待网络加载
-        check_top_activity
+        check_top_application
         wait_for_java NOTIFY_FRIENDS      # 通知好友 第一页
-        check_top_activity
+        check_top_application
         input swipe 550 1850 550 920 1200 # 向上滑动好友列表
         wait_for_java NOTIFY_FRIENDS      # 通知好友 第二页
-        check_top_activity
+        check_top_application
         input swipe 550 1850 550 920 1200 # 向上滑动好友列表
         wait_for_java NOTIFY_FRIENDS      # 通知好友 第三页
-        check_top_activity
-        input keyevent 4                  # 退出好友界面
-        input tap 400 1400                # 确认左边偷吃小鸡已赶跑
-        input tap 852 1400                # 确认右边偷吃小鸡已赶跑
-        input tap 918 1772                # 确认饲料已喂养
-        input keyevent 4                  # 退出蚂蚁庄园
-        input keyevent 4                  # 退出支付宝
+        check_top_application
+        input swipe 550 1850 550 920 1200 # 向上滑动好友列表
+        wait_for_java NOTIFY_FRIENDS      # 通知好友 第四页
+        check_top_application
+        input tap 1025 825                # 关闭好友界面
+        input keyevent 3                  # HOME 键退出支付宝
         turn_off_screen                   # 灭屏
         count=$((count+1))
     done
